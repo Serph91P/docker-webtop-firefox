@@ -1,13 +1,13 @@
-FROM ghcr.io/linuxserver/baseimage-selkies:arch
+FROM lscr.io/linuxserver/firefox:latest
 
 ARG BUILD_DATE
 ARG VERSION
 ARG CACHE_BUST
 
-LABEL build_version="Custom Firefox VPN image - Build-date:- ${BUILD_DATE}"
+LABEL build_version="Custom Firefox VPN image based on lscr.io/linuxserver/firefox - Build-date:- ${BUILD_DATE}"
 LABEL maintainer="Serph91P"
 LABEL org.opencontainers.image.title="docker-webtop-firefox"
-LABEL org.opencontainers.image.description="Firefox single-app browser for Sealskin with built-in VPN proxy profile"
+LABEL org.opencontainers.image.description="LinuxServer Firefox image for Sealskin with built-in VPN proxy profile"
 LABEL org.opencontainers.image.source="https://github.com/Serph91P/docker-webtop-firefox"
 
 ENV TITLE="Firefox VPN" \
@@ -24,7 +24,12 @@ ENV TITLE="Firefox VPN" \
 
 COPY root/ /
 
-RUN set -eux;     echo "**** cache bust ${CACHE_BUST:-none} ****";     pacman -Sy --noconfirm --needed         ca-certificates         curl         dbus         firefox         gtk3         nss         ttf-dejavu         xdg-user-dirs         xdg-utils         xorg-xwayland;     curl -fsSL -o /usr/share/selkies/www/icon.png         https://raw.githubusercontent.com/mozilla-firefox/firefox/main/browser/branding/official/default256.png;     chmod +x /defaults/autostart /defaults/autostart_wayland /defaults/startwm_wayland.sh /usr/local/bin/run-firefox;     sed -i 's|/bin/sh$|/bin/bash|g' /etc/passwd;     mkdir -p /config/Documents;     HOME=/config XDG_CONFIG_HOME=/config/.config xdg-user-dir DOCUMENTS;     firefox --version;     rm -rf /config/.cache /tmp/* /var/cache/pacman/pkg/* /var/lib/pacman/sync/*
+RUN set -eux; \
+    echo "**** cache bust ${CACHE_BUST:-none} ****"; \
+    chmod +x /defaults/autostart /defaults/autostart_wayland /defaults/startwm_wayland.sh /usr/local/bin/run-firefox; \
+    mkdir -p /config/Documents; \
+    firefox --version; \
+    rm -rf /config/.cache /tmp/*
 
 EXPOSE 3000
 VOLUME /config

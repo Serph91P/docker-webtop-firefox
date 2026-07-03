@@ -4,7 +4,7 @@ LOG=/tmp/firefox.log
 PROFILE=/config/firefox-vpn-profile
 mkdir -p "$PROFILE" /config/Downloads /config/Documents
 
-proxy="${SEALSKIN_BROWSER_PROXY:-http://sealskin-vpn-proxy:8888}"
+proxy="${SEALSKIN_BROWSER_PROXY-http://sealskin-vpn-proxy:8888}"
 proxy_host=""
 proxy_port=""
 if [ -n "$proxy" ]; then
