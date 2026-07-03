@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      update_store:
+        description: Update Serph91P/sealskin-store after build
+        type: boolean
+        default: true
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: docker-webtop-firefox
+  STORE_REPOSITORY: Serph91P/sealskin-store
+  APP_ID: webtop-firefox
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Prepare metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${REGISTRY}/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/${IMAGE_NAME}"
+          DATE=$(date +%Y%m%d)
+          SHORT_SHA=$(git rev-parse --short=12 HEAD)
+          RELEASE_TAG="${DATE}.${{ github.run_number }}-${SHORT_SHA}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.release_tag }}
+          labels: |
+            org.opencontainers.image.title=docker-webtop-firefox
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.release_tag }}
+          build-args: |
+            CACHE_BUST=${{ github.sha }}-${{ github.run_id }}
+          no-cache: true
+          cache-from: type=gha,scope=firefox
+          cache-to: type=gha,mode=max,scope=firefox
+
+      - name: Create and push git tag
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.meta.outputs.release_tag }}"
+          git push origin "${{ steps.meta.outputs.release_tag }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.meta.outputs.release_tag }}
+          generate_release_notes: true
+          body: |
+            ## Docker image
+
+            ```bash
+            docker pull ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.release_tag }}
+            docker pull ${{ steps.meta.outputs.image }}@${{ steps.build.outputs.digest }}
+            ```
+
+      - name: Update Sealskin store
+        if: ${{ github.event_name == 'push' || inputs.update_store }}
+        env:
+          GH_TOKEN: ${{ secrets.STORE_DISPATCH_TOKEN }}
+          STORE_IMAGE: ${{ steps.meta.outputs.image }}
+          STORE_TAG: ${{ steps.meta.outputs.release_tag }}
+          STORE_DIGEST: ${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "STORE_DISPATCH_TOKEN is not configured. Skipping store update."
+            exit 0
+          fi
+          python3 - <<'PY' > /tmp/store-dispatch.json
+          import json
+          import os
+
+          payload = {
+              "event_type": "update-app-image",
+              "client_payload": {
+                  "app_id": os.environ["APP_ID"],
+                  "image": os.environ["STORE_IMAGE"],
+                  "tag": os.environ["STORE_TAG"],
+                  "digest": os.environ["STORE_DIGEST"],
+              },
+          }
+          print(json.dumps(payload))
+          PY
+          gh api "repos/${STORE_REPOSITORY}/dispatches" --method POST --input /tmp/store-dispatch.json

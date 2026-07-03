@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /usr/local/bin/run-firefox >> /tmp/firefox.log 2>&1

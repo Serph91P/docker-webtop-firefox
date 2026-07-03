@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+LOG=/tmp/firefox.log
+PROFILE=/config/firefox-vpn-profile
+mkdir -p "$PROFILE" /config/Downloads /config/Documents
+
+proxy="${SEALSKIN_BROWSER_PROXY:-http://sealskin-vpn-proxy:8888}"
+proxy_host=""
+proxy_port=""
+if [ -n "$proxy" ]; then
+    proxy_no_scheme="${proxy#http://}"
+    proxy_no_scheme="${proxy_no_scheme#https://}"
+    proxy_host="${proxy_no_scheme%%:*}"
+    proxy_port="${proxy_no_scheme##*:}"
+fi
+
+cat > "$PROFILE/user.js" <<EOF
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.startup.homepage", "about:blank");
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("media.eme.enabled", true);
+user_pref("toolkit.telemetry.enabled", false);
+EOF
+
+if [ -n "$proxy_host" ] && [ -n "$proxy_port" ] && [ "$proxy_host" != "$proxy_port" ]; then
+    cat >> "$PROFILE/user.js" <<EOF
+user_pref("network.proxy.type", 1);
+user_pref("network.proxy.http", "$proxy_host");
+user_pref("network.proxy.http_port", $proxy_port);
+user_pref("network.proxy.ssl", "$proxy_host");
+user_pref("network.proxy.ssl_port", $proxy_port);
+user_pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1");
+EOF
+    echo "[firefox] using proxy $proxy" | tee -a "$LOG"
+else
+    echo "[firefox] proxy disabled" | tee -a "$LOG"
+fi
+
+rm -f "$PROFILE"/parent.lock "$PROFILE"/.parentlock 2>/dev/null || true
+exec /usr/bin/firefox --profile "$PROFILE" --no-remote ${FIREFOX_CLI:-} ${SEALSKIN_URL:+"$SEALSKIN_URL"} ${SEALSKIN_FILE:+"$SEALSKIN_FILE"}
