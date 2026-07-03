@@ -14,12 +14,25 @@ if [ -n "$proxy" ]; then
     proxy_port="${proxy_no_scheme##*:}"
 fi
 
+export TZ="${TZ:-Europe/Berlin}"
+export LANG="${LANG:-de_DE.UTF-8}"
+export LANGUAGE="${LANGUAGE:-de_DE:de:en_US:en}"
+export LC_ALL="${LC_ALL:-de_DE.UTF-8}"
+
 cat > "$PROFILE/user.js" <<EOF
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.homepage", "about:blank");
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("media.eme.enabled", true);
 user_pref("toolkit.telemetry.enabled", false);
+user_pref("network.dns.disablePrefetch", true);
+user_pref("network.predictor.enabled", false);
+user_pref("media.peerconnection.enabled", false);
+user_pref("privacy.resistFingerprinting", false);
+user_pref("privacy.trackingprotection.enabled", false);
+user_pref("privacy.trackingprotection.pbmode.enabled", false);
+user_pref("intl.accept_languages", "de-DE, de, en-US, en");
+user_pref("dom.security.https_only_mode", false);
 EOF
 
 if [ -n "$proxy_host" ] && [ -n "$proxy_port" ] && [ "$proxy_host" != "$proxy_port" ]; then
@@ -30,6 +43,7 @@ user_pref("network.proxy.http_port", $proxy_port);
 user_pref("network.proxy.ssl", "$proxy_host");
 user_pref("network.proxy.ssl_port", $proxy_port);
 user_pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1");
+user_pref("network.proxy.share_proxy_settings", true);
 EOF
     echo "[firefox] using proxy $proxy" | tee -a "$LOG"
 else

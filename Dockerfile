@@ -10,7 +10,17 @@ LABEL org.opencontainers.image.title="docker-webtop-firefox"
 LABEL org.opencontainers.image.description="Firefox single-app browser for Sealskin with built-in VPN proxy profile"
 LABEL org.opencontainers.image.source="https://github.com/Serph91P/docker-webtop-firefox"
 
-ENV TITLE="Firefox VPN"     PIXELFLUX_WAYLAND=true     SELKIES_DESKTOP=false     AUTO_GPU=true     NO_GAMEPAD=true     NO_DECOR=true     SEALSKIN_BROWSER_PROXY="http://sealskin-vpn-proxy:8888"
+ENV TITLE="Firefox VPN" \
+    PIXELFLUX_WAYLAND=true \
+    SELKIES_DESKTOP=false \
+    AUTO_GPU=true \
+    NO_GAMEPAD=true \
+    NO_DECOR=true \
+    TZ="Europe/Berlin" \
+    LANG="de_DE.UTF-8" \
+    LANGUAGE="de_DE:de:en_US:en" \
+    LC_ALL="de_DE.UTF-8" \
+    SEALSKIN_BROWSER_PROXY="http://sealskin-vpn-proxy:8888"
 
 COPY root/ /
 
