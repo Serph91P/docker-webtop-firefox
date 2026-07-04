@@ -14,10 +14,13 @@ if [ -n "$proxy" ]; then
     proxy_port="${proxy_no_scheme##*:}"
 fi
 
-export TZ="${TZ:-Europe/Berlin}"
-export LANG="${LANG:-de_DE.UTF-8}"
-export LANGUAGE="${LANGUAGE:-de_DE:de:en_US:en}"
-export LC_ALL="${LC_ALL:-de_DE.UTF-8}"
+# Force the browser fingerprint to the known working Twitch setup on every start.
+# Sealskin can inject TZ=Etc/UTC at runtime, so do not preserve inherited values here.
+export TZ="Europe/Berlin"
+export LANG="de_DE.UTF-8"
+export LANGUAGE="de_DE:de:en_US:en"
+export LC_ALL="de_DE.UTF-8"
+echo "[firefox] locale TZ=$TZ LANG=$LANG LANGUAGE=$LANGUAGE LC_ALL=$LC_ALL" | tee -a "$LOG"
 
 cat > "$PROFILE/user.js" <<EOF
 user_pref("browser.shell.checkDefaultBrowser", false);
