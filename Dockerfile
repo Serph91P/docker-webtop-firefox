@@ -20,6 +20,8 @@ ENV TITLE="Firefox VPN" \
     LANG="de_DE.UTF-8" \
     LANGUAGE="de_DE:de:en_US:en" \
     LC_ALL="de_DE.UTF-8" \
+    GTK_THEME="Adwaita:dark" \
+    COLOR_SCHEME="dark" \
     SEALSKIN_BROWSER_PROXY="http://sealskin-vpn-proxy:8888"
 
 COPY root/ /

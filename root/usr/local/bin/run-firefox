@@ -20,7 +20,10 @@ export TZ="Europe/Berlin"
 export LANG="de_DE.UTF-8"
 export LANGUAGE="de_DE:de:en_US:en"
 export LC_ALL="de_DE.UTF-8"
-echo "[firefox] locale TZ=$TZ LANG=$LANG LANGUAGE=$LANGUAGE LC_ALL=$LC_ALL" | tee -a "$LOG"
+# Force dark appearance for Firefox chrome and websites that respect prefers-color-scheme.
+export GTK_THEME="Adwaita:dark"
+export COLOR_SCHEME="dark"
+echo "[firefox] locale TZ=$TZ LANG=$LANG LANGUAGE=$LANGUAGE LC_ALL=$LC_ALL GTK_THEME=$GTK_THEME" | tee -a "$LOG"
 
 cat > "$PROFILE/user.js" <<EOF
 user_pref("browser.shell.checkDefaultBrowser", false);
@@ -36,6 +39,11 @@ user_pref("privacy.trackingprotection.enabled", false);
 user_pref("privacy.trackingprotection.pbmode.enabled", false);
 user_pref("intl.accept_languages", "de-DE, de, en-US, en");
 user_pref("dom.security.https_only_mode", false);
+user_pref("ui.systemUsesDarkTheme", 1);
+user_pref("browser.theme.toolbar-theme", 0);
+user_pref("browser.theme.content-theme", 0);
+user_pref("layout.css.prefers-color-scheme.content-override", 0);
+user_pref("widget.content.gtk-theme-override", "Adwaita:dark");
 EOF
 
 if [ -n "$proxy_host" ] && [ -n "$proxy_port" ] && [ "$proxy_host" != "$proxy_port" ]; then
