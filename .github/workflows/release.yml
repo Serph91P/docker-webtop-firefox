@@ -63,6 +63,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
+          pull: true
           tags: |
             ${{ steps.meta.outputs.image }}:latest
             ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.release_tag }}

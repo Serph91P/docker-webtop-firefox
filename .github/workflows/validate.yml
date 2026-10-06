@@ -1,0 +1,28 @@
+name: Validate Firefox image
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Build image without publishing
+        run: docker build --pull --tag firefox-validation .
+      - name: Verify Firefox and launcher
+        run: |
+          docker run --rm --entrypoint /bin/bash firefox-validation -ec '
+            firefox --version
+            test -x /usr/local/bin/run-firefox
+            test -x /defaults/autostart_wayland
+            bash -n /usr/local/bin/run-firefox
+          '
