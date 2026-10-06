@@ -1,4 +1,4 @@
-FROM lscr.io/linuxserver/firefox:latest
+FROM lscr.io/linuxserver/firefox:1157.0build1-1xtradeb1.2404.1-ls126@sha256:2637935d2bb9d5e4f474c92942d8ade7fa4df823cc4cfbcb57564217ebc6c0d6
 
 ARG BUILD_DATE
 ARG VERSION
